@@ -1,0 +1,61 @@
+- name: Create a VM from a template
+  hosts: localhost
+  gather_facts: no
+
+  vars_prompt:
+    - name: "vcenter_hostname"
+      prompt: "Enter vcenter hostname"
+      private: no
+      default: "de-vsacust.ds.incyte.com"
+    - name: "vcenter_user"
+      prompt: "Enter vcenter username"
+      private: no
+      default: "jodonnell_a@ds.incyte.com"
+    - name: "vcenter_pass"
+      prompt: "Enter vcenter password"
+      private: yes
+    - name: "new_hostname"
+      prompt: "Enter hostname of new server"
+      private: no
+    - name: "disksize"
+      prompt: "Enter vdisk size"
+      private: no
+      default: "20"
+    - name: "vm_notes"
+      prompt: "Enter vm notes"
+      private: no
+      default: "Cloned from TEMPLATE-rhel8 by ansible"
+
+  vars:
+    ansible_python_interpreter: '/usr/bin/python3'
+    datacenter: 'DE1801-vxFlex'
+    esxi_host: 'de-1801-vmwesx-009.ds.incyte.com'
+    notes: 'Created by Ansible'
+    disk: '25'
+    datastore: 'VmWare_Cluster08'
+    network: 'VLAN74'
+    memory: '4096'
+    cpucount: '2'
+    osid: 'rhel6_64Guest'
+    cluster: 'DE-1801-001'
+
+  tasks:
+  - name: Clone the template
+    vmware_guest:
+      hostname: "{{ vcenter_hostname }}"
+      username: "{{ vcenter_user }}"
+      password: "{{ vcenter_pass }}"
+      validate_certs: False
+      name: "{{ new_hostname }}"
+      template: TEMPLATE-rhel8
+      datacenter: "{{ datacenter }}"
+      state: poweredoff
+      cluster: "{{ cluster }}"
+      wait_for_ip_address: no
+      folder: /DE1801-vxFlex/vm
+      annotation: "{{ vm_notes }}"
+      disk:
+        - size_gb: "{{ disksize }}"
+          type: thin
+          datastore: "{{ datastore }}"
+
